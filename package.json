@@ -1,17 +1,19 @@
 {
   "name": "com.cupkekgames.quests",
   "displayName": "CupkekGames Quests",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "CupkekGames",
     "url": "https://www.docs.cupkek.games"
   },
   "unity": "6000.0",
   "documentationUrl": "https://docs.cupkek.games/",
-  "description": "Quest data + actions + objectives + rewards + status. Generic quest framework.",
+  "description": "Quest framework: QuestSO authoring, QuestInstance runtime (IData), [SerializeReference] polymorphic actions / conditions / objectives / rewards / features.",
   "keywords": [
     "Quests",
     "CupkekGames"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "com.cupkekgames.data": "0.1.4"
+  }
 }
