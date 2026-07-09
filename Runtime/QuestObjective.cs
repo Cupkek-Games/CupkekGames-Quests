@@ -15,7 +15,7 @@ namespace CupkekGames.Quests
     public abstract class QuestObjective
     {
         /// <summary>Set at runtime by <see cref="QuestSO.CreateInstance"/> — empty in templates.</summary>
-        public Guid QuestId;
+        public Guid QuestId { get; set; }
 
         /// <summary>Authored: amount of progress needed to complete this objective.</summary>
         public int RequiredProgress;

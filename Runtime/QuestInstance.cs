@@ -14,7 +14,7 @@ namespace CupkekGames.Quests
     [Serializable]
     public class QuestInstance : IData
     {
-        [SerializeField] private Guid _id;
+        private Guid _id;
         public Guid Id => _id;
 
         /// <summary>Catalog key of the source <see cref="QuestSO"/> — used to look up the original definition if needed.</summary>
