@@ -186,7 +186,18 @@ namespace CupkekGames.Quests
             clone.Description = Description;
             clone._timeLeft = _timeLeft;
             clone._isCompleted = _isCompleted;
-            foreach (QuestObjective o in Objectives) clone.Objectives.Add(o?.Clone());
+            foreach (QuestObjective o in Objectives)
+            {
+                // Clone() is the template-instantiation copy (resets Progress/QuestId);
+                // a save-state deep copy must preserve the runtime fields.
+                QuestObjective clonedObjective = o?.Clone();
+                if (clonedObjective != null)
+                {
+                    clonedObjective.Progress = o.Progress;
+                    clonedObjective.QuestId = o.QuestId;
+                }
+                clone.Objectives.Add(clonedObjective);
+            }
             foreach (QuestAction a in OnStartActions) clone.OnStartActions.Add(a);
             foreach (QuestAction a in OnReadyActions) clone.OnReadyActions.Add(a);
             foreach (QuestAction a in OnCompleteActions) clone.OnCompleteActions.Add(a);
