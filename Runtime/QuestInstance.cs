@@ -96,7 +96,10 @@ namespace CupkekGames.Quests
 
         public void OnTimeProgress(int progressAmount)
         {
-            if (TimeLeft > 0) TimeLeft -= progressAmount;
+            // Write the field directly: the TimeLeft setter maps <=0 to the
+            // -1 "no limit" sentinel (an authoring convenience), which made it
+            // impossible for a ticking quest to ever reach 0 and Fail.
+            if (_timeLeft > 0) _timeLeft = Math.Max(0, _timeLeft - progressAmount);
         }
 
         // ── Lifecycle ───────────────────────────────────────────
