@@ -15,7 +15,12 @@ namespace CupkekGames.Quests
     public class QuestInstance : IData
     {
         private Guid _id;
-        public Guid Id => _id;
+        /// <summary>
+        /// Settable so reflection serializers restore the saved identity on load;
+        /// a get-only Id regenerated per construction breaks TrackingQuests guids
+        /// and save round-trip stability.
+        /// </summary>
+        public Guid Id { get => _id; set => _id = value; }
 
         /// <summary>Catalog key of the source <see cref="QuestSO"/> — used to look up the original definition if needed.</summary>
         public string DefinitionKey;
