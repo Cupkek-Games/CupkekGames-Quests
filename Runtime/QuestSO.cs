@@ -7,7 +7,7 @@ namespace CupkekGames.Quests
     /// Bare ScriptableObject holding a static authored <see cref="QuestDefinition"/> template.
     /// <see cref="CreateInstance"/> clones the definition into a runtime <see cref="QuestInstance"/>.
     /// </summary>
-    [CreateAssetMenu(fileName = "Quest", menuName = "CupkekGames/QuestSystem/Quest")]
+    [CreateAssetMenu(fileName = "Quest", menuName = "CupkekGames/Quests/Quest")]
     public class QuestSO : ScriptableObject
     {
         public QuestDefinition Definition = new QuestDefinition();
