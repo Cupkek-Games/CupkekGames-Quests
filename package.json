@@ -1,19 +1,20 @@
 {
   "name": "com.cupkekgames.quests",
   "displayName": "CupkekGames Quests",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "author": {
     "name": "CupkekGames",
     "url": "https://www.docs.cupkek.games"
   },
   "unity": "6000.0",
   "documentationUrl": "https://docs.cupkek.games/",
-  "description": "Quest framework: QuestSO authoring, QuestInstance runtime (IData), [SerializeReference] polymorphic actions / conditions / objectives / rewards / features.",
+  "description": "Quest framework: authored QuestSO definitions in a QuestCatalog, a saved QuestLog of small QuestStates (key or inline definition, progress, status, deadline), objectives as plain data driven by game signals, composable rewards and features.",
   "keywords": [
     "Quests",
     "CupkekGames"
   ],
   "dependencies": {
-    "com.cupkekgames.data": "0.4.0"
+    "com.cupkekgames.data": "0.4.0",
+    "com.cupkekgames.services": "0.2.0"
   }
 }

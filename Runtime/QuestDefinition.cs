@@ -5,41 +5,36 @@ using UnityEngine;
 namespace CupkekGames.Quests
 {
     /// <summary>
-    /// Static authored quest template — held by <see cref="QuestSO"/>, cloned into a runtime <see cref="QuestInstance"/>
-    /// when the player accepts the quest. All lists are <see cref="SerializeReference"/>-polymorphic so designers
-    /// author objectives / actions / conditions / rewards / features inline (no wrapper-SO clutter).
+    /// What a quest is: its text, objectives, rewards and game data. Authored inside a
+    /// <see cref="QuestSO"/>, or built at runtime by a generator and saved inline on its
+    /// <see cref="QuestState"/>. Never mutated once a quest is in a log: progress lives on
+    /// the state.
     /// </summary>
     [Serializable]
     public class QuestDefinition
     {
-        public string Name;
+        public string Title;
         [TextArea(3, 6)] public string Description;
 
-        /// <summary>Objective templates. Cloned per runtime instance; runtime progress lives on the cloned objectives.</summary>
-        [SerializeReference] public List<QuestObjective> Objectives = new List<QuestObjective>();
+        /// <summary>Objectives complete in order: only the first open one takes progress.</summary>
+        public bool Ordered;
 
-        /// <summary>Actions executed when the quest first starts.</summary>
-        [SerializeReference] public List<QuestAction> OnStartActions = new List<QuestAction>();
+        public List<QuestObjectiveDefinition> Objectives = new List<QuestObjectiveDefinition>();
 
-        /// <summary>Actions executed when all objectives are done and the quest is ready to turn in.</summary>
-        [SerializeReference] public List<QuestAction> OnReadyActions = new List<QuestAction>();
+        /// <summary>Granted by <see cref="QuestLog.TurnIn"/>, in order.</summary>
+        [SerializeReference] public List<IQuestReward> Rewards = new List<IQuestReward>();
 
-        /// <summary>Actions executed when the quest is completed.</summary>
-        [SerializeReference] public List<QuestAction> OnCompleteActions = new List<QuestAction>();
-
-        /// <summary>Conditions gating start actions.</summary>
-        [SerializeReference] public List<QuestActionCondition> OnStartActionsConditions = new List<QuestActionCondition>();
-
-        /// <summary>Conditions gating ready actions.</summary>
-        [SerializeReference] public List<QuestActionCondition> OnReadyActionsConditions = new List<QuestActionCondition>();
-
-        /// <summary>Conditions gating complete actions.</summary>
-        [SerializeReference] public List<QuestActionCondition> OnCompleteActionsConditions = new List<QuestActionCondition>();
-
-        /// <summary>Composable rewards — multiple per quest (gold + items + XP + reputation, etc.).</summary>
-        [SerializeReference] public List<IQuestRewardFeature> Rewards = new List<IQuestRewardFeature>();
-
-        /// <summary>Game-specific extension data (e.g. NPC client reference, quest type, region).</summary>
+        /// <summary>Game data the log never reads: the giver, the source, a story line.</summary>
         [SerializeReference] public List<IQuestFeature> Features = new List<IQuestFeature>();
+
+        /// <summary>The first feature of type <typeparamref name="T"/>, or null.</summary>
+        public T GetFeature<T>() where T : class, IQuestFeature
+        {
+            foreach (IQuestFeature feature in Features)
+            {
+                if (feature is T typed) return typed;
+            }
+            return null;
+        }
     }
 }

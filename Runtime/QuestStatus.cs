@@ -1,15 +1,15 @@
 namespace CupkekGames.Quests
 {
-    /// <summary>Represents the current state of a quest.</summary>
+    /// <summary>Where a quest stands in its log.</summary>
     public enum QuestStatus
     {
-        /// <summary>The quest has uncompleted objectives.</summary>
-        InProgress,
-        /// <summary>All objectives are complete; the quest can be turned in.</summary>
+        /// <summary>Some objective is still open.</summary>
+        Active,
+        /// <summary>Every objective is done; the quest waits for <see cref="QuestLog.TurnIn"/>.</summary>
         Ready,
-        /// <summary>The quest has been turned in / completed.</summary>
+        /// <summary>Turned in; its rewards were granted.</summary>
         Completed,
-        /// <summary>The quest failed (e.g. time ran out).</summary>
+        /// <summary>Failed: its deadline ran out, or the game failed it.</summary>
         Failed,
     }
 }
