@@ -16,7 +16,7 @@ namespace CupkekGames.Quests
     {
         public List<QuestState> Quests { get; private set; } = new List<QuestState>();
 
-        [NonSerialized] private Func<string, QuestDefinition> _resolve;
+        [NonSerialized] private Func<CatalogKey, QuestDefinition> _resolve;
 
         public event Action<QuestState> Added;
         /// <summary>An objective moved (the quest, the objective's index).</summary>
@@ -30,46 +30,41 @@ namespace CupkekGames.Quests
 
         private QuestLog(QuestLog other)
         {
-            foreach (QuestState quest in other.Quests) Quests.Add(new QuestState(quest));
+            foreach (QuestState quest in other.Quests) Quests.Add(quest.Clone());
             _resolve = other._resolve;
         }
 
         /// <summary>
-        /// Sets how authored keys resolve and attaches every quest's definition. A saved key
-        /// that no longer resolves is an error: the game removed a quest a save still holds.
+        /// Sets how keys resolve to definitions (usually the game's quest catalog) and
+        /// attaches every quest. A saved key that no longer resolves is an error: the game
+        /// removed a quest a save still holds.
         /// </summary>
-        public void Bind(Func<string, QuestDefinition> resolve)
+        public void Bind(Func<CatalogKey, QuestDefinition> resolve)
         {
             _resolve = resolve ?? throw new ArgumentNullException(nameof(resolve));
-            foreach (QuestState quest in Quests) quest.Attach(ResolveFor(quest));
+            foreach (QuestState quest in Quests) Attach(quest);
         }
 
-        /// <summary>Binds against a catalog.</summary>
-        public void Bind(QuestCatalog catalog)
+        /// <summary>Attaches a quest's definition without adding it (a quest shown before it is taken, like an offer on a board).</summary>
+        public void Attach(QuestState quest)
         {
-            if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-            Bind(key => catalog.GetValue(key)?.Definition);
+            if (_resolve == null) throw new InvalidOperationException("QuestLog.Bind was not called.");
+            QuestDefinition definition = _resolve(quest.Key);
+            if (definition == null) throw new InvalidOperationException($"No quest definition for key '{quest.Key.Catalog}/{quest.Key.Key}'.");
+            quest.Attach(definition);
         }
 
         // ── Adding ──────────────────────────────────────────────
 
-        /// <summary>Adds the authored quest <paramref name="key"/>.</summary>
-        public QuestState Add(string key, int deadline = -1)
-        {
-            if (string.IsNullOrEmpty(key)) throw new ArgumentException("An authored quest needs a key.", nameof(key));
-            return AddState(new QuestState(key, null, deadline));
-        }
+        /// <summary>Adds the quest at <paramref name="key"/>.</summary>
+        public QuestState Add(CatalogKey key, int deadline = -1) => Add(new QuestState(key, deadline));
 
-        /// <summary>Adds a generated quest; its definition is saved with it.</summary>
-        public QuestState Add(QuestDefinition definition, int deadline = -1)
+        /// <summary>Adds a prepared quest (a generated one carries its roll as feature state).</summary>
+        public QuestState Add(QuestState quest)
         {
-            if (definition == null) throw new ArgumentNullException(nameof(definition));
-            return AddState(new QuestState(null, definition, deadline));
-        }
-
-        private QuestState AddState(QuestState quest)
-        {
-            quest.Attach(ResolveFor(quest));
+            if (quest == null) throw new ArgumentNullException(nameof(quest));
+            if (Quests.Contains(quest)) throw new InvalidOperationException("The quest is already in the log.");
+            Attach(quest);
             Quests.Add(quest);
             Added?.Invoke(quest);
             // A quest with nothing left to do is ready at once (unless an Added
@@ -78,22 +73,13 @@ namespace CupkekGames.Quests
             return quest;
         }
 
-        private QuestDefinition ResolveFor(QuestState quest)
-        {
-            if (quest.Inline != null) return quest.Inline;
-            if (_resolve == null) throw new InvalidOperationException("QuestLog.Bind was not called.");
-            QuestDefinition definition = _resolve(quest.Key);
-            if (definition == null) throw new InvalidOperationException($"No quest definition for key '{quest.Key}'.");
-            return definition;
-        }
-
         // ── Progress ────────────────────────────────────────────
 
         /// <summary>Something happened <paramref name="amount"/> times: adds to every live objective it matches.</summary>
         public void Signal(string kind, string key = null, int amount = 1)
         {
             if (amount <= 0) return;
-            Apply(kind, key, (current, required) => current + amount);
+            Apply(kind, key, current => current + amount);
         }
 
         /// <summary>
@@ -102,22 +88,20 @@ namespace CupkekGames.Quests
         /// </summary>
         public void Report(string kind, string key, int value)
         {
-            Apply(kind, key, (current, required) => Math.Max(current, value));
+            Apply(kind, key, current => Math.Max(current, value));
         }
 
-        private void Apply(string kind, string key, Func<int, int, int> next)
+        private void Apply(string kind, string key, Func<int, int> next)
         {
             // Snapshot: a handler may add or remove quests.
             foreach (QuestState quest in Quests.ToArray())
             {
                 if (quest.Status != QuestStatus.Active) continue;
-                List<QuestObjectiveDefinition> objectives = quest.Definition.Objectives;
                 bool moved = false;
-                for (int i = 0; i < objectives.Count; i++)
+                for (int i = 0; i < quest.ObjectiveCount; i++)
                 {
-                    if (!quest.IsObjectiveLive(i) || !objectives[i].Matches(kind, key)) continue;
-                    int required = objectives[i].Required;
-                    int value = Math.Min(required, next(quest.Progress[i], required));
+                    if (!quest.IsObjectiveLive(i) || !quest.ObjectiveMatches(i, kind, key)) continue;
+                    int value = Math.Min(quest.ObjectiveRequired(i), next(quest.Progress[i]));
                     if (value == quest.Progress[i]) continue;
                     quest.Progress[i] = value;
                     moved = true;
@@ -144,7 +128,7 @@ namespace CupkekGames.Quests
             if (quest.Status != QuestStatus.Ready)
                 throw new InvalidOperationException($"Quest '{quest.Definition.Title}' is {quest.Status}, not Ready.");
             quest.Status = QuestStatus.Completed;
-            foreach (IQuestReward reward in quest.Definition.Rewards) reward.Grant();
+            foreach (IQuestReward reward in quest.Definition.Rewards) reward.Grant(quest);
             Completed?.Invoke(quest);
         }
 
@@ -178,10 +162,10 @@ namespace CupkekGames.Quests
 
         public QuestState Find(Guid id) => Quests.Find(q => q.Id == id);
 
-        /// <summary>The latest quest added from the authored <paramref name="key"/>, or null.</summary>
-        public QuestState FindByKey(string key) => Quests.FindLast(q => q.Key == key);
+        /// <summary>The latest quest added from <paramref name="key"/>, or null.</summary>
+        public QuestState FindByKey(CatalogKey key) => Quests.FindLast(q => q.Key.Equals(key));
 
-        public bool HasCompleted(string key) => Quests.Exists(q => q.Key == key && q.Status == QuestStatus.Completed);
+        public bool HasCompleted(CatalogKey key) => Quests.Exists(q => q.Key.Equals(key) && q.Status == QuestStatus.Completed);
 
         // ── IData ───────────────────────────────────────────────
 
@@ -189,7 +173,7 @@ namespace CupkekGames.Quests
 
         public void OnAfterDeserialize() { }
 
-        /// <summary>A deep copy of the states; definitions are shared (they never change in a log).</summary>
+        /// <summary>A deep copy of the states; definitions are shared (they never change).</summary>
         public IData CloneData() => new QuestLog(this);
     }
 }

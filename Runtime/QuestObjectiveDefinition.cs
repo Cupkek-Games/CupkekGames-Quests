@@ -6,7 +6,8 @@ namespace CupkekGames.Quests
     /// One objective, as plain data: progress comes from signals whose kind matches
     /// <see cref="Kind"/> and whose key matches <see cref="Key"/> (an empty key accepts any).
     /// The game owns the vocabulary of kinds and keys and posts the signals
-    /// (<see cref="QuestLog.Signal"/>, <see cref="QuestLog.Report"/>).
+    /// (<see cref="QuestLog.Signal"/>, <see cref="QuestLog.Report"/>). A generated quest may
+    /// replace the key and the count per quest (<see cref="QuestRoll"/>).
     /// </summary>
     [Serializable]
     public class QuestObjectiveDefinition
@@ -31,8 +32,5 @@ namespace CupkekGames.Quests
             Key = key;
             Required = required;
         }
-
-        public bool Matches(string kind, string key)
-            => Kind == kind && (string.IsNullOrEmpty(Key) || Key == key);
     }
 }
