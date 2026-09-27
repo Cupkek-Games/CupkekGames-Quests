@@ -8,7 +8,7 @@
   },
   "unity": "6000.0",
   "documentationUrl": "https://docs.cupkek.games/",
-  "description": "Quest framework: authored QuestSO definitions in a QuestCatalog, a saved QuestLog of small QuestStates (key or inline definition, progress, status, deadline), objectives as plain data driven by game signals, composable rewards and features.",
+  "description": "Quest framework: authored QuestSO definitions in a QuestCatalog, a saved QuestLog of small QuestStates (a catalog key, progress, status, deadline, per-feature state), objectives as plain data driven by game signals, composable rewards and features.",
   "keywords": [
     "Quests",
     "CupkekGames"
