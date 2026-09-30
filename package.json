@@ -1,7 +1,7 @@
 {
   "name": "com.cupkekgames.quests",
   "displayName": "CupkekGames Quests",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "CupkekGames",
     "url": "https://www.docs.cupkek.games"
@@ -14,7 +14,7 @@
     "CupkekGames"
   ],
   "dependencies": {
-    "com.cupkekgames.data": "0.4.0",
-    "com.cupkekgames.services": "0.2.0"
+    "com.cupkekgames.data": "0.4.1",
+    "com.cupkekgames.services": "0.2.1"
   }
 }
