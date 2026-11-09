@@ -7,7 +7,8 @@ namespace CupkekGames.Quests
     /// <summary>
     /// The quests a player has, and the one place their progress changes. The game posts
     /// what happened (<see cref="Signal"/>, <see cref="Report"/>); the log moves matching
-    /// objectives, marks quests Ready, and completes them on <see cref="TurnIn"/>.
+    /// objectives, marks quests Ready, and completes them on <see cref="TurnIn"/>, granting
+    /// rewards into the game's <see cref="IQuestGrantContext"/>.
     /// Saved as part of the game state; call <see cref="Bind"/> after creating or loading
     /// one, before anything else.
     /// </summary>
@@ -121,14 +122,18 @@ namespace CupkekGames.Quests
 
         // ── Ending ──────────────────────────────────────────────
 
-        /// <summary>Completes a Ready quest and grants its rewards.</summary>
-        public void TurnIn(QuestState quest)
+        /// <summary>
+        /// Completes a Ready quest and grants its rewards into <paramref name="context"/>
+        /// (the game's player, wallet and services, from whoever turns it in).
+        /// </summary>
+        public void TurnIn(QuestState quest, IQuestGrantContext context)
         {
             if (quest == null) throw new ArgumentNullException(nameof(quest));
+            if (context == null) throw new ArgumentNullException(nameof(context));
             if (quest.Status != QuestStatus.Ready)
                 throw new InvalidOperationException($"Quest '{quest.Definition.Title}' is {quest.Status}, not Ready.");
             quest.Status = QuestStatus.Completed;
-            foreach (IQuestReward reward in quest.Definition.Rewards) reward.Grant(quest);
+            foreach (IQuestReward reward in quest.Definition.Rewards) reward.Grant(quest, context);
             Completed?.Invoke(quest);
         }
 

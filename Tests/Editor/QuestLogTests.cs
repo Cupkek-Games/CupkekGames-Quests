@@ -12,10 +12,13 @@ namespace CupkekGames.Quests.Tests
         {
             public int Granted;
             public QuestState LastQuest;
-            public void Grant(QuestState quest) { Granted++; LastQuest = quest; }
-            public string Describe(QuestState quest) => "count";
+            public IQuestGrantContext LastContext;
+            public void Grant(QuestState quest, IQuestGrantContext context) { Granted++; LastQuest = quest; LastContext = context; }
+            public string Describe(QuestState quest, IQuestGrantContext context) => "count";
             public IFeature CloneFeature() => new CountingReward();
         }
+
+        private class Grants : IQuestGrantContext { }
 
         private class Marker : IFeatureStateData
         {
@@ -110,20 +113,23 @@ namespace CupkekGames.Quests.Tests
         }
 
         [Test]
-        public void TurnIn_GrantsRewardsOnce_WithTheQuest()
+        public void TurnIn_GrantsRewardsOnce_WithTheQuestAndContext()
         {
             CatalogKey key = Define("paid", false, new QuestObjectiveDefinition("cook"));
             CountingReward reward = new CountingReward();
             _definitions["paid"].Rewards.Add(reward);
             QuestState quest = _log.Add(key);
+            Grants grants = new Grants();
 
-            Assert.Throws<InvalidOperationException>(() => _log.TurnIn(quest));
+            Assert.Throws<InvalidOperationException>(() => _log.TurnIn(quest, grants));
             _log.Signal("cook");
-            _log.TurnIn(quest);
+            Assert.Throws<ArgumentNullException>(() => _log.TurnIn(quest, null));
+            _log.TurnIn(quest, grants);
             Assert.AreEqual(QuestStatus.Completed, quest.Status);
             Assert.AreEqual(1, reward.Granted);
             Assert.AreSame(quest, reward.LastQuest, "a reward is handed the quest it pays for");
-            Assert.Throws<InvalidOperationException>(() => _log.TurnIn(quest));
+            Assert.AreSame(grants, reward.LastContext, "and the context it pays into");
+            Assert.Throws<InvalidOperationException>(() => _log.TurnIn(quest, grants));
 
             _log.Signal("cook");
             Assert.AreEqual(1, reward.Granted, "a completed quest takes no more progress");

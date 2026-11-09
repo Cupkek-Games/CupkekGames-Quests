@@ -41,14 +41,18 @@ log.Report("fame", null, 3);       // a value the game owns: objectives rise to 
 log.Tick(2);                       // time passed: deadlines run down, 0 fails
 
 log.Ready += q => ...;             // every objective done
-log.TurnIn(story);                 // Ready -> Completed, rewards granted
+log.TurnIn(story, grants);         // Ready -> Completed, rewards granted into the game's context
 ```
 
 A quest is `Active`, then `Ready` when every objective is done, then
 `Completed` on `TurnIn`, or `Failed` by its deadline or `Fail`. Turning in is the
 game's call: a quest with no ceremony can turn itself in from the `Ready` event.
-Rewards are handed the quest (`Grant(quest)`), so they can read its roll or
-feature state.
+Rewards are handed the quest and the game's grant context
+(`Grant(quest, context)`): the quest so they can read its roll or feature state,
+the context (`IQuestGrantContext`, the game's own type over its player and
+services) so they pay into whatever the caller turns the quest in against and
+look nothing up themselves. A reward reads the game's type with
+`context.Require<MyGrants>()`, which throws on a missing or foreign context.
 
 Saving: `QuestState` is an opt-in data contract (its key, progress, status,
 deadline and feature state). Register your `IFeatureStateData` types with your
